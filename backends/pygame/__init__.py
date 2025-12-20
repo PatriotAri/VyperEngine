@@ -1,1 +1,0 @@
-self.is_headless = False

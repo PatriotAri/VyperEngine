@@ -7,7 +7,7 @@ from engine.ports.input_state import InputState
 class PygameWindow(Window):
     def __init__(self, size: tuple[int, int] = (800, 600), title: str = "Vyper Engine"):
         pygame.init()
-
+        self.is_headless = False
         self._size = size
         self._surface = pygame.display.set_mode(size)
         pygame.display.set_caption(title)
