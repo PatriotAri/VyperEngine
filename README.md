@@ -48,10 +48,18 @@ engine.run()
 
 ## Headless / CI Usage
 
-`main.py` is intended for interactive, windowed runs only.
+Vyper Engine separates **interactive execution** from **automated / headless execution**.
 
-For automated testing, CI, or tools such as Codex, use the
-dedicated headless entrypoint:
+### Interactive Runs (Humans)
+
+`main.py` initializes a full `PygameWindow` along with input, camera, and render
+systems. It expects:
+
+- a visible display
+- user interaction
+- window close events to terminate the engine loop
+
+Run it only in environments with a real display:
 
 ```bash
-python tools/run_headless.py
+python main.py
