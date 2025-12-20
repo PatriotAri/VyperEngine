@@ -221,4 +221,12 @@ Alpha v2.3.1
 Alpha v2.x.x (Current)
 ============
 
--Added components/velocity.py. This marks the start of the physics engine.
+-Added components/velocity.py. Proper movement pipeline. This marks the start of the physics engine.
+
+-Added components/collider.py. Implements collision physics.
+
+-Added systems/collision_system.py.
+
+-Added components/rigidbody.py to make static entities like walls, objects, map boundaries, etc.
+
+-

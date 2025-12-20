@@ -23,6 +23,8 @@ from engine.ecs.components.renderable import Renderable
 from engine.ecs.components.camera_target import CameraTarget
 from engine.ecs.components.player_controlled import PlayerControlled
 from engine.ecs.components.velocity import Velocity
+from engine.ecs.components.collider import Collider
+from engine.ecs.components.rigidbody import RigidBody, BodyType
 
 from engine.ecs.systems.input_system import InputSystem
 from engine.ecs.systems.movement_system import MovementSystem
@@ -30,6 +32,7 @@ from engine.ecs.systems.basic_render_system import BasicRenderSystem
 from engine.ecs.systems.camera_follow_system import CameraFollowSystem
 from engine.ecs.systems.camera_update_system import CameraUpdateSystem
 from engine.ecs.systems.physics_integrate_system import PhysicsIntegrateSystem
+from engine.ecs.systems.collision_system import CollisionSystem
 
 from engine.debug.debug_config import DebugConfig
 from engine.debug.debug_toggle_system import DebugToggleSystem
@@ -50,7 +53,27 @@ def main():
     world.add_component(test_entity, CameraTarget())
     world.add_component(test_entity, Sprite(size=(32, 32), color=(200, 200, 200)))
     world.add_component(test_entity, PlayerControlled())
-    #-----------------------------
+    world.add_component(test_entity, Collider(half_width = 16, half_height = 16))
+    world.add_component(test_entity, RigidBody(BodyType.DYNAMIC))
+    #------------------------------
+
+    #--- Bootstrap test wall -----
+    wall = world.create_entity()
+    world.add_component(wall, Transform(x=200, y=100))
+    world.add_component(wall, Renderable())
+    world.add_component(wall, Sprite(size=(32, 32), color=(200, 200, 200)))
+    world.add_component(wall, Collider(half_width=32, half_height=32))
+    world.add_component(wall, RigidBody(BodyType.STATIC))
+    #-------------------------------
+
+    #--- Bootstrap block ------
+    block = world.create_entity()
+    world.add_component(block, Transform(x=250, y=100))
+    world.add_component(block, Renderable())
+    world.add_component(block, Sprite(size=(32, 32), color=(200, 200, 200)))
+    world.add_component(block, Collider(half_width=32, half_height=32))
+    world.add_component(block, RigidBody(BodyType.DYNAMIC))
+    #-------------------------------
 
     #order is input ->movement ->cameraFollow ->render
 
@@ -59,6 +82,7 @@ def main():
     #fixed systems(movement, camera follow)
     engine.add_fixed_system(MovementSystem(speed = 100.0))
     engine.add_fixed_system(PhysicsIntegrateSystem())
+    engine.add_fixed_system(CollisionSystem())
     engine.add_fixed_system(CameraFollowSystem())
     engine.add_fixed_system(CameraUpdateSystem())
     #render systems (world -> screen)
