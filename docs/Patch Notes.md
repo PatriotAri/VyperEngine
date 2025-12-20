@@ -209,16 +209,16 @@ Alpha v2.3.0
 Alpha v2.3.1
 ============
 
--Implemented backend architecture for headless runs.
+-Implemented headless backend architecture.
 
 -Added tools/ directory in root. This is where engine arhcitecture that doesnt live in the engine itself stays.
 
 -Updated README.md
 
--Added null_renderer.py to ports/ for headless runs.
+-Added null_renderer.py to ports/ for headless backend.
 
 
-Alpha v2.x.x (Current)
+Alpha v2.3.2 (Current)
 ============
 
 -Added components/velocity.py. Proper movement pipeline. This marks the start of the physics engine.
@@ -227,6 +227,8 @@ Alpha v2.x.x (Current)
 
 -Added systems/collision_system.py.
 
--Added components/rigidbody.py to make static entities like walls, objects, map boundaries, etc.
+-Added components/rigidbody.py to differentiate between static and dynamic entities like walls, objects, map boundaries, etc.
 
--
+-Fixed wall and added block test entity bootstraps to main.py. Will be removed in the future.
+
+-Final patch before refactor to fully integrate physics.
