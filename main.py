@@ -1,7 +1,7 @@
 import os
 import sys
 
-# main.py is interactive-only
+# main.py is interactive-only and requires a visible display
 if os.environ.get("SDL_VIDEODRIVER") == "dummy":
     print(
         "Error: main.py is intended for interactive, windowed runs only.\n"
