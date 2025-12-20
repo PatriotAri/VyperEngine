@@ -1,3 +1,16 @@
+import os
+import sys
+
+# main.py is interactive-only
+if os.environ.get("SDL_VIDEODRIVER") == "dummy":
+    print(
+        "Error: main.py is intended for interactive, windowed runs only.\n"
+        "Detected SDL_VIDEODRIVER=dummy (headless environment).\n\n"
+        "For CI, automation, or Codex runs, use:\n"
+        "  python tools/run_headless.py"
+    )
+    sys.exit(1)
+
 from engine.core.engine import Engine
 from engine.core.clock import Clock
 
