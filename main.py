@@ -45,7 +45,7 @@ def main():
     world = engine.get_world()
     test_entity = world.create_entity()
     world.add_component(test_entity, Transform(x=100.0, y=100.0))
-    world.add_components(test_entity, Velocity())
+    world.add_component(test_entity, Velocity())
     world.add_component(test_entity, Renderable())
     world.add_component(test_entity, CameraTarget())
     world.add_component(test_entity, Sprite(size=(32, 32), color=(200, 200, 200)))
