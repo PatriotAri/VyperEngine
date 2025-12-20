@@ -176,7 +176,7 @@ Alpha v2.2.1
 -Centered camera in basic_render_system.py
 
 
-Alpha v2.3.0 (Current)
+Alpha v2.3.0
 ============
 
 -Resolved major conflic between Renderable class in renderable.py and sprite.py.
@@ -204,3 +204,21 @@ Alpha v2.3.0 (Current)
 -Fixed debug_render_system, now prints all entity transforms.
 
 -Added a note to ports/renderer/draw_sprite.py to reserve for later use over temporary rect.
+
+
+Alpha v2.3.1
+============
+
+-Implemented backend architecture for headless runs.
+
+-Added tools/ directory in root. This is where engine arhcitecture that doesnt live in the engine itself stays.
+
+-Updated README.md
+
+-Added null_renderer.py to ports/ for headless runs.
+
+
+Alpha v2.x.x (Current)
+============
+
+-Added components/velocity.py. This marks the start of the physics engine.

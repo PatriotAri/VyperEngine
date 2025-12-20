@@ -22,12 +22,14 @@ from engine.ecs.components.sprite import Sprite
 from engine.ecs.components.renderable import Renderable
 from engine.ecs.components.camera_target import CameraTarget
 from engine.ecs.components.player_controlled import PlayerControlled
+from engine.ecs.components.velocity import Velocity
 
 from engine.ecs.systems.input_system import InputSystem
 from engine.ecs.systems.movement_system import MovementSystem
 from engine.ecs.systems.basic_render_system import BasicRenderSystem
 from engine.ecs.systems.camera_follow_system import CameraFollowSystem
 from engine.ecs.systems.camera_update_system import CameraUpdateSystem
+from engine.ecs.systems.physics_integrate_system import PhysicsIntegrateSystem
 
 from engine.debug.debug_config import DebugConfig
 from engine.debug.debug_toggle_system import DebugToggleSystem
@@ -55,6 +57,7 @@ def main():
     engine.add_update_system(InputSystem())
     #fixed systems(movement, camera follow)
     engine.add_fixed_system(MovementSystem(speed = 100.0))
+    engine.add_fixed_system(PhysicsIntegrateSystem())
     engine.add_fixed_system(CameraFollowSystem())
     engine.add_fixed_system(CameraUpdateSystem())
     #render systems (world -> screen)
