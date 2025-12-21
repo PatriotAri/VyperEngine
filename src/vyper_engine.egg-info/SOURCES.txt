@@ -1,10 +1,13 @@
-README.md
 pyproject.toml
+setup.cfg
+setup.py
 src/vyper_engine/__init__.py
 src/vyper_engine/main.py
+src/vyper_engine/run.py
 src/vyper_engine.egg-info/PKG-INFO
 src/vyper_engine.egg-info/SOURCES.txt
 src/vyper_engine.egg-info/dependency_links.txt
+src/vyper_engine.egg-info/entry_points.txt
 src/vyper_engine.egg-info/top_level.txt
 src/vyper_engine/backends/pygame/__init__.py
 src/vyper_engine/backends/pygame/renderer.py
@@ -48,4 +51,5 @@ src/vyper_engine/engine/ports/input_state.py
 src/vyper_engine/engine/ports/null_renderer.py
 src/vyper_engine/engine/ports/renderer.py
 src/vyper_engine/engine/ports/window.py
+src/vyper_engine/runtime/mode.py
 src/vyper_engine/tools/run_headless.py

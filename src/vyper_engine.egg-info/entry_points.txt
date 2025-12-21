@@ -1,0 +1,2 @@
+[console_scripts]
+vyper = vyper_engine.main:main

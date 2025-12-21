@@ -1,96 +1,133 @@
+"""
+Vyper Engine main entrypoint.
+
+This file is responsible ONLY for:
+- parsing runtime intent (windowed vs headless)
+- validating environment constraints
+- constructing the correct Window + Renderer
+- starting the Engine
+
+It does NOT:
+- auto-detect CI
+- silently change behavior
+- exit early without explanation
+"""
+
+from __future__ import annotations
+
+import argparse
 import os
 import sys
 
-# main.py is interactive-only and requires a visible display
-if os.environ.get("SDL_VIDEODRIVER") == "dummy":
-    print(
-        "Error: main.py is intended for interactive, windowed runs only.\n"
-        "Detected SDL_VIDEODRIVER=dummy (headless environment).\n\n"
-        "For CI, automation, or Codex runs, use:\n"
-        "  python tools/run_headless.py"
-    )
-    sys.exit(1)
+from vyper_engine.engine.engine import Engine
 
-from vyper_engine.engine.core.engine import Engine
-from vyper_engine.engine.core.clock import Clock
-
+# Window / Renderer backends
 from vyper_engine.backends.pygame.window import PygameWindow
 from vyper_engine.backends.pygame.renderer import PygameRenderer
+from vyper_engine.backends.headless.window import HeadlessWindow
+from vyper_engine.backends.headless.renderer import NullRenderer
 
-from vyper_engine.engine.ecs.components.transform import Transform
-from vyper_engine.engine.ecs.components.sprite import Sprite
-from vyper_engine.engine.ecs.components.renderable import Renderable
-from vyper_engine.engine.ecs.components.camera_target import CameraTarget
-from vyper_engine.engine.ecs.components.player_controlled import PlayerControlled
-from vyper_engine.engine.ecs.components.velocity import Velocity
-from vyper_engine.engine.ecs.components.collider import Collider
-from vyper_engine.engine.ecs.components.rigidbody import RigidBody, BodyType
 
-from vyper_engine.engine.ecs.systems.input_system import InputSystem
-from vyper_engine.engine.ecs.systems.movement_system import MovementSystem
-from vyper_engine.engine.ecs.systems.basic_render_system import BasicRenderSystem
-from vyper_engine.engine.ecs.systems.camera_follow_system import CameraFollowSystem
-from vyper_engine.engine.ecs.systems.camera_update_system import CameraUpdateSystem
-from vyper_engine.engine.ecs.systems.physics_integrate_system import PhysicsIntegrateSystem
-from vyper_engine.engine.ecs.systems.collision_system import CollisionSystem
+# ----------------------------
+# Argument parsing
+# ----------------------------
 
-from vyper_engine.engine.debug.debug_config import DebugConfig
-from vyper_engine.engine.debug.debug_toggle_system import DebugToggleSystem
-from vyper_engine.engine.debug.debug_render_system import DebugRenderSystem
+def build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="vyper",
+        description="Vyper Engine runtime"
+    )
 
-def main():
-    window = PygameWindow(size = (960, 540), title = "Vyper Engine")
-    renderer = PygameRenderer()
-    clock = Clock(fixed_dt = 1 / 60)
-    engine = Engine(window = window, renderer = renderer, clock = clock)
+    parser.add_argument(
+        "--mode",
+        choices=("windowed", "headless"),
+        default="windowed",
+        help="Run mode (default: windowed)"
+    )
 
-    # --- Bootstrap test entity ---
-    world = engine.get_world()
-    test_entity = world.create_entity()
-    world.add_component(test_entity, Transform(x=100.0, y=100.0))
-    world.add_component(test_entity, Velocity())
-    world.add_component(test_entity, Renderable())
-    world.add_component(test_entity, CameraTarget())
-    world.add_component(test_entity, Sprite(size=(32, 32), color=(200, 200, 200)))
-    world.add_component(test_entity, PlayerControlled())
-    world.add_component(test_entity, Collider(half_width = 16, half_height = 16))
-    world.add_component(test_entity, RigidBody(BodyType.DYNAMIC))
-    #------------------------------
+    parser.add_argument("--width", type=int, default=1280)
+    parser.add_argument("--height", type=int, default=720)
+    parser.add_argument("--title", type=str, default="Vyper Engine")
 
-    #--- Bootstrap test wall -----
-    wall = world.create_entity()
-    world.add_component(wall, Transform(x=200, y=100))
-    world.add_component(wall, Renderable())
-    world.add_component(wall, Sprite(size=(32, 128), color=(200, 200, 200)))
-    world.add_component(wall, Collider(half_width=16, half_height=64))
-    world.add_component(wall, RigidBody(BodyType.STATIC))
-    #-------------------------------
+    parser.add_argument(
+        "--frames",
+        type=int,
+        default=None,
+        help="Optional frame limit (useful for headless runs)"
+    )
 
-    #--- Bootstrap block ------
-    block = world.create_entity()
-    world.add_component(block, Transform(x=250, y=100))
-    world.add_component(block, Renderable())
-    world.add_component(block, Sprite(size=(32, 32), color=(200, 200, 200)))
-    world.add_component(block, Collider(half_width=16, half_height=16))
-    world.add_component(block, RigidBody(BodyType.DYNAMIC))
-    #-------------------------------
+    return parser
 
-    #order is input ->movement ->cameraFollow ->render
 
-    #update systems(input, AI)
-    engine.add_update_system(InputSystem())
-    #fixed systems(movement, camera follow)
-    engine.add_fixed_system(MovementSystem(speed = 100.0))
-    engine.add_fixed_system(PhysicsIntegrateSystem())
-    engine.add_fixed_system(CollisionSystem())
-    engine.add_fixed_system(CameraFollowSystem())
-    engine.add_fixed_system(CameraUpdateSystem())
-    #render systems (world -> screen)
-    engine.add_render_system(BasicRenderSystem(renderer, window))
+# ----------------------------
+# Environment validation
+# ----------------------------
 
-    world.add_resource(DebugConfig())
+def validate_windowed_environment() -> None:
+    """
+    Ensure a windowed run is actually possible.
+    """
+    sdl_driver = os.environ.get("SDL_VIDEODRIVER")
 
-    engine.add_update_system(DebugToggleSystem())
-    engine.add_render_system(DebugRenderSystem(renderer))
+    if sdl_driver == "dummy":
+        raise RuntimeError(
+            "\nWindowed mode requested, but SDL_VIDEODRIVER=dummy.\n\n"
+            "This environment cannot create a window.\n\n"
+            "Fix one of the following:\n"
+            "  • Unset SDL_VIDEODRIVER\n"
+            "  • Run with: --mode headless\n\n"
+            "Example:\n"
+            "  unset SDL_VIDEODRIVER\n"
+            "  python -m vyper_engine.main\n"
+        )
+
+
+# ----------------------------
+# Main bootstrap
+# ----------------------------
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+
+    print("Vyper Engine")
+    print(f"Mode: {args.mode}")
+
+    # ------------------------
+    # Windowed mode
+    # ------------------------
+    if args.mode == "windowed":
+        validate_windowed_environment()
+
+        window = PygameWindow(
+            width=args.width,
+            height=args.height,
+            title=args.title,
+        )
+        renderer = PygameRenderer(window)
+
+    # ------------------------
+    # Headless mode
+    # ------------------------
+    else:
+        window = HeadlessWindow()
+        renderer = NullRenderer()
+
+    engine = Engine(
+        window=window,
+        renderer=renderer,
+    )
+
+    # Optional frame cap (especially useful in CI)
+    if args.frames is not None:
+        engine.set_frame_cap(args.frames)
 
     engine.run()
+    return 0
+
+
+# ----------------------------
+# Script entry
+# ----------------------------
+
+if __name__ == "__main__":
+    raise SystemExit(main())
