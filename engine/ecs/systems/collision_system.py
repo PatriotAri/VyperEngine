@@ -4,7 +4,6 @@ from engine.ecs.components.collider import Collider
 from engine.ecs.components.velocity import Velocity
 from engine.ecs.components.rigidbody import RigidBody, BodyType
 
-
 _EPS = 1e-6  # helps avoid tiny jitter / re-penetration due to float noise
 
 
@@ -12,99 +11,84 @@ class CollisionSystem(FixedSystem):
     """
     Phase 4: Axis-separated AABB resolution.
 
-    We resolve X penetration first, then Y penetration.
-    This improves sliding, reduces corner snagging, and eliminates micro-gaps.
+    Collisions are resolved along the axis with the minimum penetration
+    (minimum translation vector).
     """
 
     def update(self, world, dt: float) -> None:
-        entities = list(world.entities_with(Transform, Collider))
+        entities = list(world.entities_with(Transform, Collider, RigidBody))
 
         for i in range(len(entities)):
             a = entities[i]
             ta = world.get_component(a, Transform)
             ca = world.get_component(a, Collider)
-            va = world.get_component(a, Velocity)
             ra = world.get_component(a, RigidBody)
 
             for j in range(i + 1, len(entities)):
                 b = entities[j]
                 tb = world.get_component(b, Transform)
                 cb = world.get_component(b, Collider)
-                vb = world.get_component(b, Velocity)
                 rb = world.get_component(b, RigidBody)
+
+                # Skip static-static collisions
+                if ra.body_type == BodyType.STATIC and rb.body_type == BodyType.STATIC:
+                    continue
 
                 dx = tb.x - ta.x
                 dy = tb.y - ta.y
 
                 overlap_x = (ca.half_width + cb.half_width) - abs(dx)
-                overlap_y = (ca.half_height + cb.half_height) - abs(dy)
-
-                if overlap_x <= 0 or overlap_y <= 0:
+                if overlap_x <= 0:
                     continue
 
-                # NEW: choose a single axis to resolve
-                axis = self._choose_axis(va, vb, overlap_x, overlap_y)
+                overlap_y = (ca.half_height + cb.half_height) - abs(dy)
+                if overlap_y <= 0:
+                    continue
 
-                if axis == "x":
-                    push = overlap_x if dx > 0 else -overlap_x
+                # Resolve along minimum penetration axis
+                if overlap_x < overlap_y:
+                    self._resolve_x(world, a, b, dx, overlap_x)
                 else:
-                    push = overlap_y if dy > 0 else -overlap_y
+                    self._resolve_y(world, a, b, dy, overlap_y)
 
-                self._resolve_pair(world, a, b, ta, tb, ra, rb, push, axis)
+    def _resolve_x(self, world, a, b, dx: float, overlap: float) -> None:
+        ta = world.get_component(a, Transform)
+        tb = world.get_component(b, Transform)
+        ra = world.get_component(a, RigidBody)
+        rb = world.get_component(b, RigidBody)
 
-    def _choose_axis(self, va, vb, overlap_x, overlap_y) -> str:
-    
-   
+        sep = overlap + _EPS
+        if dx > 0:
+            sep = -sep
 
-        vx = (va.vx if va else 0.0) - (vb.vx if vb else 0.0)
-        vy = (va.vy if va else 0.0) - (vb.vy if vb else 0.0)
+        if ra.body_type == BodyType.DYNAMIC:
+            ta.x += sep
+            va = world.get_component(a, Velocity)
+            va.vx = 0.0
 
-        if abs(vx) > abs(vy):
-            return "x"
-        if abs(vy) > abs(vx):
-            return "y"
+        if rb.body_type == BodyType.DYNAMIC:
+            tb.x -= sep
+            vb = world.get_component(b, Velocity)
+            if vb is not None:
+                vb.vx = 0.0
 
-        # Fallback: smaller penetration
-        return "x" if overlap_x < overlap_y else "y"
+    def _resolve_y(self, world, a, b, dy: float, overlap: float) -> None:
+        ta = world.get_component(a, Transform)
+        tb = world.get_component(b, Transform)
+        ra = world.get_component(a, RigidBody)
+        rb = world.get_component(b, RigidBody)
 
-    def _resolve_pair(self, world, a, b, ta, tb, ra, rb, push: float, axis: str) -> None:
-        # Default missing rigidbody = STATIC
-        type_a = ra.body_type if ra else BodyType.STATIC
-        type_b = rb.body_type if rb else BodyType.STATIC
+        sep = overlap + _EPS
+        if dy > 0:
+            sep = -sep
 
-        # Clamp into contact by moving bodies exactly by penetration amount (+ tiny eps)
-        # eps keeps them from re-penetrating immediately due to float error.
-        if type_a == BodyType.DYNAMIC and type_b == BodyType.STATIC:
-            self._move(ta, -push - self._signed_eps(push), axis)
-            self._zero_velocity(world, a, axis)
+        if ra.body_type == BodyType.DYNAMIC:
+            ta.y += sep
+            va = world.get_component(a, Velocity)
+            va.vy = 0.0
 
-        elif type_a == BodyType.STATIC and type_b == BodyType.DYNAMIC:
-            self._move(tb, push + self._signed_eps(push), axis)
-            self._zero_velocity(world, b, axis)
-
-        elif type_a == BodyType.DYNAMIC and type_b == BodyType.DYNAMIC:
-            half = push / 2.0
-            self._move(ta, -half - self._signed_eps(half), axis)
-            self._move(tb, half + self._signed_eps(half), axis)
-            self._zero_velocity(world, a, axis)
-            self._zero_velocity(world, b, axis)
-
-        # STATIC vs STATIC: no move
-
-    def _signed_eps(self, value: float) -> float:
-        return _EPS if value >= 0 else -_EPS
-
-    def _move(self, t: Transform, amount: float, axis: str) -> None:
-        if axis == "x":
-            t.x += amount
-        else:
-            t.y += amount
-
-    def _zero_velocity(self, world, entity, axis: str) -> None:
-        vel = world.get_component(entity, Velocity)
-        if not vel:
-            return
-        if axis == "x":
-            vel.vx = 0.0
-        else:
-            vel.vy = 0.0
+        if rb.body_type == BodyType.DYNAMIC:
+            tb.y -= sep
+            vb = world.get_component(b, Velocity)
+            if vb is not None:
+                vb.vy = 0.0
