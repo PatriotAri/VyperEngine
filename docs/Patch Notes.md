@@ -234,7 +234,17 @@ Alpha v2.3.2
 -Final patch before refactor to fully integrate physics.
 
 
-Alpha v2.4.0 (Current)
+Alpha v2.4.0
 ============
 
--Final phase (phase 4) of physics engine implemented.
+-Final major phase (phase 4) of basic physics engine implemented.
+
+
+Alpha v2.4.1 (Current)
+============
+
+-Normalized diagonal speed in ecs/systems/collision_system.py.
+
+-Fixed jittering, entity edges overlapping, or seeing occasional gaps between entities when continuously colliding.
+
+-

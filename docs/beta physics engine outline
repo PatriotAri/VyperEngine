@@ -1,0 +1,221 @@
+VyperEngine Physics Evolution Path
+STAGE 0 — CURRENT STATE (BASELINE)
+
+Fixed timestep
+
+Discrete AABB collision detection
+
+Position-based collision resolution
+
+No mass
+
+No impulses
+
+Single-pass resolution
+
+No sleeping
+
+Capabilities:
+
+Static world collision
+
+One controlled player
+
+Simple interactions
+
+Limitations:
+
+Dynamic–dynamic chains drift
+
+No momentum conservation
+
+No realistic pushing
+
+STAGE 1 — PLAYER-AUTHORITATIVE COLLISION (NEXT STEP)
+
+Goal:
+
+Stable gameplay
+
+No jitter or drift
+
+Predictable control
+
+Rules:
+
+Player does not yield in collisions
+
+Other entities yield to the player
+
+Static bodies never move
+
+Notes:
+
+Player behaves like a kinematic body
+
+Other dynamics respond but do not push back
+
+Benefits:
+
+No chain reaction drift
+
+Smooth pushing
+
+Stable corners and edges
+
+Comparable to:
+
+Unity CharacterController
+
+Godot KinematicBody
+
+STAGE 2 — MASS / INVERSE MASS (STILL POSITION-BASED)
+
+Goal:
+
+Differentiate heavy vs light objects
+
+Add:
+
+inverse_mass on RigidBody
+
+0.0 = immovable
+
+1.0 = normal
+
+< 1.0 = heavy
+
+Change:
+
+Split positional correction proportionally to inverse_mass
+
+Benefits:
+
+Heavy objects resist motion
+
+Light objects move easily
+
+Player can be treated as infinite mass
+
+STAGE 3 — CONTACT PERSISTENCE / RESTING CONTACTS
+
+Goal:
+
+Stop re-penetration every frame
+
+Remove residual jitter
+
+Add:
+
+Grounded detection
+
+Contact memory (resting vs impacting)
+
+Rules:
+
+If velocity is into a resting surface, suppress it
+
+Do not reapply movement into stable contacts
+
+Benefits:
+
+Stable stacks
+
+Solid floors
+
+No buzzing at rest
+
+STAGE 4 — SOLVER ITERATIONS
+
+Goal:
+
+Allow collision chains to converge
+
+Add:
+
+Multiple resolution passes per fixed step
+(e.g. 4–10 iterations)
+
+Why:
+
+Single-pass solvers cannot settle multi-body contacts
+
+Benefits:
+
+Reduced drift
+
+More stable multi-object interactions
+
+STAGE 5 — IMPULSE-BASED RESOLUTION (TRUE PHYSICS)
+
+Goal:
+
+Momentum conservation
+
+Realistic collision response
+
+Replace:
+
+Position-first correction
+
+With:
+
+Impulse calculation based on:
+
+collision normal
+
+relative velocity
+
+inverse mass
+
+Position correction:
+
+Secondary, for numerical stability only
+
+Benefits:
+
+Proper pushing
+
+No artificial energy loss
+
+Option B (fully physical) becomes valid
+
+STAGE 6 — SLEEPING / DEACTIVATION
+
+Goal:
+
+Performance and total stability
+
+Add:
+
+Sleep objects when:
+
+velocity is near zero
+
+for N consecutive frames
+
+Rules:
+
+Sleeping objects skip collision resolution
+
+Wake on contact or force
+
+Benefits:
+
+No micro-jitter
+
+Large worlds perform well
+
+STAGE 7 — OPTIONAL ADVANCED FEATURES
+
+Add only after previous stages are solid:
+
+Friction
+
+Restitution (bounciness)
+
+Joints / constraints
+
+Continuous collision detection
+
+Slopes and complex shapes

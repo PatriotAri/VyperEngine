@@ -61,8 +61,8 @@ def main():
     wall = world.create_entity()
     world.add_component(wall, Transform(x=200, y=100))
     world.add_component(wall, Renderable())
-    world.add_component(wall, Sprite(size=(32, 32), color=(200, 200, 200)))
-    world.add_component(wall, Collider(half_width=16, half_height=16))
+    world.add_component(wall, Sprite(size=(32, 128), color=(200, 200, 200)))
+    world.add_component(wall, Collider(half_width=16, half_height=64))
     world.add_component(wall, RigidBody(BodyType.STATIC))
     #-------------------------------
 
