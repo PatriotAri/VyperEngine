@@ -218,7 +218,7 @@ Alpha v2.3.1
 -Added null_renderer.py to ports/ for headless backend.
 
 
-Alpha v2.3.2 (Current)
+Alpha v2.3.2
 ============
 
 -Added components/velocity.py. Proper movement pipeline. This marks the start of the physics engine.
@@ -232,3 +232,9 @@ Alpha v2.3.2 (Current)
 -Fixed wall and added block test entity bootstraps to main.py. Will be removed in the future.
 
 -Final patch before refactor to fully integrate physics.
+
+
+Alpha v2.4.0 (Current)
+============
+
+-Final phase (phase 4) of physics engine implemented.
