@@ -1,9 +1,10 @@
+import math
+
 from engine.ecs.system_base import UpdateSystem
 from engine.ecs.components.intent import MoveIntent
 from engine.ports.input_state import InputState
 from engine.ecs.components.transform import Transform
 from engine.ecs.components.player_controlled import PlayerControlled
-
 
 class InputSystem(UpdateSystem):
     """
@@ -27,6 +28,12 @@ class InputSystem(UpdateSystem):
             dx -= 1.0
         if "d" in input_state.keys_down:
             dx += 1.0
+
+        #normalize diagonal intent so movement speed is consistent in all directions
+        mag = math.hypot(dx, dy)
+        if mag > 0.0:
+            dx /= mag
+            dy /= mag
 
         # Apply intent to player-controlled entities (always, even if zero)
         for entity in world.entities_with(Transform, PlayerControlled):
