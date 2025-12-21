@@ -65,7 +65,7 @@ class CollisionSystem(FixedSystem):
             return "y"
 
         # Fallback: smaller penetration
-        return "x" if overlap_x > overlap_y else "y"
+        return "x" if overlap_x < overlap_y else "y"
 
     def _resolve_pair(self, world, a, b, ta, tb, ra, rb, push: float, axis: str) -> None:
         # Default missing rigidbody = STATIC
