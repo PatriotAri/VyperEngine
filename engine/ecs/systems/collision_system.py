@@ -26,31 +26,31 @@ class CollisionSystem(FixedSystem):
             va = world.get_component(a, Velocity)
             ra = world.get_component(a, RigidBody)
 
-        for j in range(i + 1, len(entities)):
-            b = entities[j]
-            tb = world.get_component(b, Transform)
-            cb = world.get_component(b, Collider)
-            vb = world.get_component(b, Velocity)
-            rb = world.get_component(b, RigidBody)
+            for j in range(i + 1, len(entities)):
+                b = entities[j]
+                tb = world.get_component(b, Transform)
+                cb = world.get_component(b, Collider)
+                vb = world.get_component(b, Velocity)
+                rb = world.get_component(b, RigidBody)
 
-            dx = tb.x - ta.x
-            dy = tb.y - ta.y
+                dx = tb.x - ta.x
+                dy = tb.y - ta.y
 
-            overlap_x = (ca.half_width + cb.half_width) - abs(dx)
-            overlap_y = (ca.half_height + cb.half_height) - abs(dy)
+                overlap_x = (ca.half_width + cb.half_width) - abs(dx)
+                overlap_y = (ca.half_height + cb.half_height) - abs(dy)
 
-            if overlap_x <= 0 or overlap_y <= 0:
-                continue
+                if overlap_x <= 0 or overlap_y <= 0:
+                    continue
 
-            # NEW: choose a single axis to resolve
-            axis = self._choose_axis(va, vb, overlap_x, overlap_y)
+                # NEW: choose a single axis to resolve
+                axis = self._choose_axis(va, vb, overlap_x, overlap_y)
 
-            if axis == "x":
-                push = overlap_x if dx > 0 else -overlap_x
-            else:
-                push = overlap_y if dy > 0 else -overlap_y
+                if axis == "x":
+                    push = overlap_x if dx > 0 else -overlap_x
+                else:
+                    push = overlap_y if dy > 0 else -overlap_y
 
-            self._resolve_pair(world, a, b, ta, tb, ra, rb, push, axis)
+                self._resolve_pair(world, a, b, ta, tb, ra, rb, push, axis)
 
     def _choose_axis(self, va, vb, overlap_x, overlap_y) -> str:
     
