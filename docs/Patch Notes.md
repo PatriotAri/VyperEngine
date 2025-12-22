@@ -240,9 +240,22 @@ Alpha v2.4.0
 -Final major phase (phase 4) of basic physics engine implemented.
 
 
-Alpha v2.4.1 (Current)
+Alpha v2.4.1
 ============
 
 -Normalized diagonal speed in ecs/systems/collision_system.py.
 
 -Fixed jittering, entity edges overlapping, or seeing occasional gaps between entities when continuously colliding.
+
+-Alpha v2.5.0 (Current)
+=============
+
+-Turned project into a package.
+
+-Added split startup for local and headless executions.
+
+-Added setup.cfg to root.
+
+-Added setup.py to root.
+
+-Added runtime/mode.py to vyper_engine/.
