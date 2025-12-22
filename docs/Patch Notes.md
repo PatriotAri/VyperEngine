@@ -247,7 +247,7 @@ Alpha v2.4.1
 
 -Fixed jittering, entity edges overlapping, or seeing occasional gaps between entities when continuously colliding.
 
--Alpha v2.5.0 (Current)
+Alpha v2.5.0
 =============
 
 -Turned project into a package.
@@ -259,3 +259,15 @@ Alpha v2.4.1
 -Added setup.py to root.
 
 -Added runtime/mode.py to vyper_engine/.
+
+
+Alpha v2.5.1 (Current)
+============
+
+-Deleted vyper_engine/run.py.
+
+-Added vyper_engine/game.py.
+
+-Simplified windowed branch in main.py.
+
+-Proved ECS -> render pipeline works, renders entity.
