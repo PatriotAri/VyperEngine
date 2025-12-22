@@ -4,8 +4,9 @@ Vyper Engine main entrypoint.
 Responsibilities:
 - parse runtime intent (windowed vs headless)
 - validate environment constraints
-- construct the correct Window + Renderer
-- start the Engine
+- construct Window + Renderer
+- construct Engine
+- hand off to Application (scene bootstrapping)
 """
 
 from __future__ import annotations
@@ -13,15 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 
-from vyper_engine.engine.ecs.systems.basic_render_system import BasicRenderSystem
-from vyper_engine.engine.debug.debug_render_system import DebugRenderSystem
-from vyper_engine.engine.debug.debug_toggle_system import DebugToggleSystem
-from vyper_engine.engine.ecs.systems.input_system import InputSystem
-
 from vyper_engine.engine.core.engine import Engine
-
-#Game
-from vyper_engine.game import Game
 
 # Windowed backend (pygame)
 from vyper_engine.backends.pygame.window import PygameWindow
@@ -30,6 +23,9 @@ from vyper_engine.backends.pygame.renderer import PygameRenderer
 # Headless backend (ports)
 from vyper_engine.engine.ports.headless_window import HeadlessWindow
 from vyper_engine.engine.ports.null_renderer import NullRenderer
+
+from vyper_engine.app import Application
+from vyper_engine.scenes.test_scene import TestScene
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -41,8 +37,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default="windowed",
         help="Run mode (default: windowed)",
     )
-    parser.add_argument("--width", type=int, default=1280)
-    parser.add_argument("--height", type=int, default=720)
+    parser.add_argument("--width", type=int, default=960)
+    parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--title", type=str, default="Vyper Engine")
 
     parser.add_argument(
@@ -50,7 +46,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="Optional frame limit (useful for headless runs). "
-             "If omitted in headless mode, Engine defaults to 60 frames.",
+             "If omitted in headless mode, Engine defaults to a safety cap.",
     )
 
     return parser
@@ -75,21 +71,23 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.mode == "windowed":
         validate_windowed_environment()
+        window = PygameWindow(size=(args.width, args.height), title=args.title)
+        renderer = PygameRenderer()
+        engine = Engine(window=window, renderer=renderer)
 
-    window = PygameWindow(size=(args.width, args.height), title=args.title)
-    renderer = PygameRenderer()
-    engine = Engine(window=window, renderer=renderer)
-
-    game = Game(engine)
-    game.setup()
-
-    engine.run()
-    return 0
+        app = Application(engine)
+        app.load_scene(TestScene())
+        engine.run()
+        return 0
 
     # headless
     window = HeadlessWindow()
     renderer = NullRenderer()
     engine = Engine(window=window, renderer=renderer)
+
+    app = Application(engine)
+    app.load_scene(TestScene())
+
     engine.run(max_frames=args.frames)
     return 0
 
