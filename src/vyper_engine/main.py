@@ -20,6 +20,9 @@ from vyper_engine.engine.ecs.systems.input_system import InputSystem
 
 from vyper_engine.engine.core.engine import Engine
 
+#Game
+from vyper_engine.game import Game
+
 # Windowed backend (pygame)
 from vyper_engine.backends.pygame.window import PygameWindow
 from vyper_engine.backends.pygame.renderer import PygameRenderer
@@ -72,31 +75,16 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.mode == "windowed":
         validate_windowed_environment()
-        window = PygameWindow(size=(args.width, args.height), title=args.title)
-        renderer = PygameRenderer()
-        engine = Engine(window=window, renderer=renderer)
 
-        # ----------------------------
-        # Register systems (fact-based)
-        # ----------------------------
+    window = PygameWindow(size=(args.width, args.height), title=args.title)
+    renderer = PygameRenderer()
+    engine = Engine(window=window, renderer=renderer)
 
-        # Input must come first
-        engine.add_update_system(InputSystem())
+    game = Game(engine)
+    game.setup()
 
-        # Debug toggle listens to input
-        engine.add_update_system(DebugToggleSystem())
-
-        # Rendering
-        engine.add_render_system(BasicRenderSystem(renderer, window))
-        engine.add_render_system(DebugRenderSystem(renderer))
-
-        # Add debug configuration resource (REQUIRED)
-        from vyper_engine.engine.debug.debug_config import DebugConfig
-        engine.world.add_resource(DebugConfig())
-
-        engine.run()
-
-        return 0
+    engine.run()
+    return 0
 
     # headless
     window = HeadlessWindow()
