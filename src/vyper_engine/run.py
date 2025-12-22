@@ -6,11 +6,11 @@ import sys
 
 from vyper_engine.runtime.mode import parse_mode, WINDOWED, HEADLESS
 # Adjust these imports to match your actual class names/locations:
-from vyper_engine.engine import Engine
+from vyper_engine.engine.core.engine import Engine
 from vyper_engine.backends.pygame.window import PygameWindow
 from vyper_engine.backends.pygame.renderer import PygameRenderer
-from vyper_engine.backends.headless.window import HeadlessWindow
-from vyper_engine.backends.headless.renderer import NullRenderer
+from vyper_engine.engine.ports.headless_window import HeadlessWindow
+from vyper_engine.engine.ports.null_renderer import NullRenderer
 
 
 def _env_constraints_summary() -> str:
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.frames is not None:
         engine.set_frame_cap(args.frames)  # only if you have this; otherwise remove
 
-    engine.run()
+    engine.run(max_frames=args.frames)
     return 0
 
 
